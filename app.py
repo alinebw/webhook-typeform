@@ -40,6 +40,9 @@ def get_header(headers, header_name):
 
 # Função principal da Lambda
 def lambda_handler(event, context):
+    connection = None
+    id_entregavel = None
+    
     # Obter headers e body
     headers = event.get("headers", {})
     typeform_signature = get_header(headers, 'Typeform-Signature') or ''
@@ -250,5 +253,5 @@ def lambda_handler(event, context):
             "body": json.dumps({"error": str(e)})
         }
     finally:
-        if 'connection' in locals() and connection:
+        if connection:
             connection.close()
