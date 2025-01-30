@@ -14,10 +14,7 @@ DB_NAME = os.getenv('DB_NAME')
 DB_PORT = int(os.getenv('DB_PORT', 3306))
 
 # Check variáveis de ambiente
-logging.info(f"DB_HOST: {DB_HOST}")
-logging.info(f"DB_USER: {DB_USER}")
-logging.info(f"DB_NAME: {DB_NAME}")
-logging.info(f"DB_PORT: {DB_PORT}")
+logging.info("Conectando ao banco de dados")
 
 def get_db_connection():
     """Estabelece conexão com o banco de dados"""
