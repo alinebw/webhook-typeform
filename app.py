@@ -15,7 +15,8 @@ from database import (
     insert_resposta,
     associate_pergunta_entregavel,
     log_processamento,
-    log_event
+    log_event,
+    Checklist
 )
 
 # Configuração do logger
@@ -126,10 +127,14 @@ def lambda_handler(event, context):
             data_recebimento = datetime.strptime(
                 data_recebimento, '%Y-%m-%dT%H:%M:%SZ'
             ).strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Criar objetos das classes
+        checklist = Checklist(str(id_checklist)) if id_checklist else None
+        #avaliacao = Avaliacao(str(id_avaliacao), checklist) if id_avaliacao else None
+        #entregavel = Entregavel(str(id_entregavel), avaliacao, data_recebimento)
+
 
         # Conversão de tipos
-        if id_checklist is not None:
-            id_checklist = str(id_checklist)
 
         if id_avaliacao is not None:
             id_avaliacao = str(id_avaliacao)
@@ -137,7 +142,7 @@ def lambda_handler(event, context):
 
         # Inserir checklist
         if id_checklist:
-            insert_checklist(connection, id_checklist)
+            insert_checklist(connection, checklist)
 
         # Inserir avaliação
         if id_avaliacao:

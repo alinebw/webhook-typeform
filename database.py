@@ -14,10 +14,17 @@ DB_NAME = os.getenv('DB_NAME')
 DB_PORT = int(os.getenv('DB_PORT', 3306))
 
 # Check variáveis de ambiente
-logging.info(f"DB_HOST: {DB_HOST}")
-logging.info(f"DB_USER: {DB_USER}")
-logging.info(f"DB_NAME: {DB_NAME}")
-logging.info(f"DB_PORT: {DB_PORT}")
+logging.info("Conectando ao banco de dados")
+
+# Definição classe Checklist
+class Checklist:
+    def __init__(self, id_checklist: str):
+        self.id_checklist = str(id_checklist)
+        self.validate()
+        
+    def validate(self):
+        """Valida os dados do checklist antes da inserção"""
+        validate_data("id_checklist", self.id_checklist, str, max_length=45)
 
 def get_db_connection():
     """Estabelece conexão com o banco de dados"""
@@ -48,14 +55,14 @@ def validate_data(field_name, value, expected_type, max_length=None):
     if max_length and isinstance(value, str) and len(value) > max_length:
         raise ValueError(f"{field_name} excede o tamanho máximo de {max_length} caracteres.")
 
-def insert_checklist(connection, id_checklist):
+def insert_checklist(connection, checklist: Checklist):
     """
     Insere um checklist no banco de dados, se ainda não existir.
     """
     try:
         with connection.cursor() as cursor:
             sql_check = "SELECT 1 FROM checklists WHERE id_checklist = %s"
-            cursor.execute(sql_check, (id_checklist,))
+            cursor.execute(sql_check, (checklist.id_checklist,))
             exists = cursor.fetchone()
 
             if not exists:
@@ -63,19 +70,18 @@ def insert_checklist(connection, id_checklist):
                     INSERT INTO checklists (id_checklist)
                     VALUES (%s)
                 """
-                # Validação de dados
-                validate_data("id_checklist", id_checklist, str, max_length=45)
+                checklist.validate()
 
-                cursor.execute(sql_insert, (id_checklist,))
-                log_event(f"Checklist {id_checklist} inserido com sucesso.")
+                cursor.execute(sql_insert, (checklist.id_checklist,))
+                log_event(f"Checklist {checklist.id_checklist} inserido com sucesso.")
             else:
-                log_event(f"Checklist {id_checklist} já existe. Nenhuma inserção realizada.")
+                log_event(f"Checklist {checklist.id_checklist} já existe. Nenhuma inserção realizada.")
 
     except Exception as e:
-        log_event(f"Erro ao inserir checklist {id_checklist}: {e}", logging.ERROR)
+        log_event(f"Erro ao inserir checklist {checklist.id_checklist}: {e}", logging.ERROR)
         raise
 
-def insert_avaliacao(connection, id_avaliacao, id_checklist):
+def insert_avaliacao(connection, id_avaliacao, checklist: Checklist):
     """
     Insere uma avaliação no banco de dados, se ainda não existir.
     """
@@ -92,12 +98,11 @@ def insert_avaliacao(connection, id_avaliacao, id_checklist):
                 """
                 # Validação de dados
                 validate_data("id_avaliacao", id_avaliacao, str, max_length=45)
-                validate_data("id_checklist", id_checklist, str, max_length=45)
 
                 status = 'Em andamento'  # Definir o status como "Em andamento" para identificar forms que chegam de avaliação realmente em andamento
 
                 cursor.execute(sql_insert, (
-                    id_avaliacao, id_checklist, status
+                    id_avaliacao, checklist.id_checklist, status
                 ))
                 log_event(f"Avaliação {id_avaliacao} inserida com sucesso.")
             else:
@@ -107,7 +112,7 @@ def insert_avaliacao(connection, id_avaliacao, id_checklist):
         log_event(f"Erro ao inserir avaliação {id_avaliacao}: {e}", logging.ERROR)
         raise
 
-def insert_entregavel(connection, id_entregavel, id_avaliacao, data_recebimento, nome_respondente, comentario_obrigatorio, comentario_opcional, id_checklist):
+def insert_entregavel(connection, id_entregavel, id_avaliacao, data_recebimento, nome_respondente, comentario_obrigatorio, comentario_opcional, checklist: Checklist):
     """
     Insere um entregável no banco de dados, se ainda não existir.
     """
@@ -128,7 +133,7 @@ def insert_entregavel(connection, id_entregavel, id_avaliacao, data_recebimento,
 
                 cursor.execute(sql_insert, (
                     id_entregavel, id_avaliacao, data_recebimento,
-                    nome_respondente, comentario_obrigatorio, comentario_opcional, id_checklist
+                    nome_respondente, comentario_obrigatorio, comentario_opcional, checklist.id_checklist
                 ))
                 log_event(f"Entregável {id_entregavel} inserido com sucesso.")
             else:
